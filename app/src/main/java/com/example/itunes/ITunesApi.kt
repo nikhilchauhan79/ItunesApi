@@ -25,6 +25,7 @@ interface ITunesApi {
 object MusicService{
     private val client = OkHttpClient.Builder().build()
 
+
     private val retrofit = Retrofit.Builder()
             .baseUrl("https://itunes.apple.com/")
             .addConverterFactory(GsonConverterFactory.create())

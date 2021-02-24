@@ -10,6 +10,7 @@ public abstract class MusicDatabase :RoomDatabase(){
     abstract fun musicDao(): MusicDao
 
     companion object {
+        @Volatile
         private var INSTANCE: MusicDatabase? = null
 
         fun getInstance(context: Context): MusicDatabase? {
@@ -18,7 +19,7 @@ public abstract class MusicDatabase :RoomDatabase(){
                     INSTANCE = Room.databaseBuilder(context.applicationContext, MusicDatabase::class.java, "music_database.db").build()
                 }
             }
-            return INSTANCE
+            return INSTANCE!!
         }
 
         fun destroyInstance() {

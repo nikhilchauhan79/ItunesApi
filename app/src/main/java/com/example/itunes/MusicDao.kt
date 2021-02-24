@@ -1,19 +1,17 @@
 package com.example.itunes
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.lifecycle.LiveData
+import androidx.room.*
 import retrofit2.http.DELETE
 
 @Dao
 interface MusicDao {
 
     @Query("SELECT * FROM music_data")
-    fun getAllResults(): List<ResultsOff>
+    fun getAllResults(): LiveData<List<ResultsOff>>
 
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(vararg resultsData: ResultsOff)
 
     @Delete
