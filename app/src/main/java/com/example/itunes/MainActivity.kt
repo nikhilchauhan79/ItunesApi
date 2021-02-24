@@ -3,8 +3,7 @@ package com.example.itunes
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
-import android.os.Bundle
+import android.os.*
 import android.util.Log
 import android.view.Menu
 import android.widget.*
@@ -33,7 +32,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: RepoListAdapter
     private var itemsList = ArrayList<Results>()
     private var displayList = ArrayList<Results>()
-    private var roomList = ArrayList<ResultsOff>()
+    private var numToast=1
+    private var displayListRoom = ArrayList<Results>()
+
+    private var roomList = ArrayList<Results>()
     private lateinit var searchView: SearchView
     lateinit var recyclerView: RecyclerView
 
@@ -53,8 +55,39 @@ class MainActivity : AppCompatActivity() {
         musicViewModel = ViewModelProvider(this).get(MusicViewModel::class.java)
 
 
+
+
+
     }
 
+    fun getOfflineData(data:String){
+        Log.d("text rec", "filter: " + data)
+        val temp: ArrayList<Results> = ArrayList()
+        temp.clear()
+        if((displayListRoom==null ||displayListRoom.size==0)&& numToast<2){
+            Toast.makeText(context,"No offline data found",Toast.LENGTH_SHORT).show()
+            numToast++
+        }
+        for (d in displayListRoom) {
+            //or use .equal(text) with you want equal match
+            //use .toLowerCase() for better matches
+            if (d.trackName?.contains(data.toString(), ignoreCase = true)!!) {
+                temp.add(d)
+                Log.d("track NAME", "filter: " + d.trackName)
+            }
+        }
+
+        if(displayListRoom!=null) {
+            adapter = RepoListAdapter(displayList)
+//               recyclerView.layoutManager = layoutManager
+            val manager =
+                GridLayoutManager(applicationContext, 2, GridLayoutManager.VERTICAL, false)
+            recyclerView.layoutManager = manager
+            recyclerView.itemAnimator = DefaultItemAnimator()
+            recyclerView.adapter = adapter
+        }
+
+    }
     private fun getJsonData(data: String?) {
         val request = MusicService.buildService(ITunesApi::class.java)
 
@@ -235,7 +268,7 @@ class MainActivity : AppCompatActivity() {
                         musicViewModel.insertData(applicationContext, resultOffData)
 
                         itemsList.add(resultData)
-                        roomList.add(resultOffData)
+                        roomList.add(resultOffData.toResponseRecord())
                         //arrayListSearch.add(Results(json_objectdetail.getString("trackName")))
 //                   model.id=json_objectdetail.getString("id")
 //                   model.name=json_objectdetail.getString("name")
@@ -243,6 +276,7 @@ class MainActivity : AppCompatActivity() {
 //                   arrayList_details.add(model)
                     }
                     displayList.addAll(itemsList)
+                    displayListRoom.addAll(itemsList)
 
 //               val layoutManager = LinearLayoutManager(applicationContext)
                     adapter = RepoListAdapter(itemsList)
@@ -278,7 +312,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    TODO("Not yet implemented")
+                    filterRoom("")
                 }
 
             })
@@ -321,6 +355,29 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
+    fun filterRoom(text: String?) {
+        Log.d("text rec", "filter: " + text)
+        val temp: ArrayList<Results> = ArrayList()
+        temp.clear()
+        for (d in displayListRoom) {
+            //or use .equal(text) with you want equal match
+            //use .toLowerCase() for better matches
+            if (d.trackName?.contains(text.toString(), ignoreCase = true)!!) {
+                temp.add(d)
+                Log.d("track NAME", "filter: " + d.trackName)
+            }
+        }
+        //update recyclerview
+//        val layoutManager = LinearLayoutManager(applicationContext)
+        adapter = RepoListAdapter(temp)
+//        recyclerView.layoutManager = layoutManager
+        val manager = GridLayoutManager(applicationContext, 2, GridLayoutManager.VERTICAL, false)
+        recyclerView.layoutManager = manager
+
+        recyclerView.itemAnimator = DefaultItemAnimator()
+        recyclerView.adapter = adapter
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.search_menu, menu)
         val menuItem = menu?.findItem(R.id.search)
@@ -333,12 +390,23 @@ class MainActivity : AppCompatActivity() {
 //                    val search= query?.toLowerCase(Locale.getDefault())
 //                    filter(search?.toLowerCase())
                     val search = query?.toLowerCase(Locale.getDefault())
+
+                    if(!getConnectionType(applicationContext)){
+                        filterRoom(search)
+                    }
                     getJsonData(search)
                     return true
                 }
 
                 override fun onQueryTextChange(newText: String?): Boolean {
                     val search = newText?.toLowerCase(Locale.getDefault())
+
+                    if(!getConnectionType(applicationContext)){
+                        if (search != null) {
+                            getOfflineData(search)
+                        }
+                    }
+
                     filter(search)
                     return true
                 }

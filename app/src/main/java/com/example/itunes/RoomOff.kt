@@ -63,3 +63,22 @@ data class ResultsOff (
 
 
 )
+fun ResultsOff.toResponseRecord()=Results(
+    0,
+    wrapperType,
+    kind,
+    collectionId,
+    trackId,
+    artistName,
+    collectionName,
+    trackName,
+    collectionCensoredName,
+    trackCensoredName,
+    collectionViewUrl,
+    previewUrl,
+    trackPrice,
+    releaseDate,
+    country,
+    primaryGenreName,
+    artworkUrl100
+)
